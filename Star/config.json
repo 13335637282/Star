@@ -1,17 +1,17 @@
 {
   "log": {
-    "path": ".Star/log"
+    "path": "Star/log"
   },
   "settings": {
     "lang": "zh_cn",
     "ui": {
-      "theme": "dark",
+      "theme": "light",
       "os": "mac"
     },
     "font": "微软雅黑"
   },
   "test": {
-    "last_test": "D:\\Java\\Star\\x.json"
+    "last_test": ""
   },
 
   "lang": {
