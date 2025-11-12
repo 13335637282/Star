@@ -515,29 +515,6 @@ public class QuestionComponent extends JPanel {
         return answer;
     }
 
-    // 添加验证方法
-    public boolean isValid() {
-        log.AddLog(Log.DEBUG, "[QuestionComponent] Validating component - type: " + questionType);
-
-        boolean valid = true;
-
-        if (questionType == null || questionType.trim().isEmpty()) {
-            log.AddLog(Log.ERROR, "[QuestionComponent] Invalid question type");
-            valid = false;
-        }
-
-        if (answerCount < 0) {
-            log.AddLog(Log.WARNING, "[QuestionComponent] Invalid answer count: " + answerCount);
-        }
-
-        if (check_actions == null) {
-            log.AddLog(Log.ERROR, "[QuestionComponent] Check actions list is null");
-            valid = false;
-        }
-
-        log.AddLog(Log.DEBUG, "[QuestionComponent] Validation result: " + (valid ? "VALID" : "INVALID"));
-        return valid;
-    }
 
     // 添加状态报告方法
     public void logState() {
