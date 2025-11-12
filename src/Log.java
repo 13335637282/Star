@@ -12,8 +12,10 @@ import org.fusesource.jansi.Ansi;
 public class Log {
     static final String Information = "INFO";
     static final String INFO= "INFO";
-    static final String WRONG = "WRONG";
+    static final String WARNING = "WARNING";
     static final String ERROR = "ERROR";
+    static final String DEBUG = "DEBUG";
+    static final String TRACE = "TRACE";
     static String log_path = "Star/log";
     static Config config = new Config();
     static {
@@ -60,7 +62,10 @@ public class Log {
 
         switch (level) {
             case INFO -> System.out.println(new Ansi().fg(Ansi.Color.BLUE).bold().a(text).reset());
-            case WRONG -> System.out.println(new Ansi().fg(Ansi.Color.YELLOW).bold().a(text).reset());
+            case WARNING -> System.out.println(new Ansi().fg(Ansi.Color.YELLOW).bold().a(text).reset());
+            case ERROR -> System.out.println(new Ansi().fg(Ansi.Color.RED).bold().a(text).reset());
+            case DEBUG -> System.out.println(new Ansi().fg(Ansi.Color.CYAN).bold().a(text).reset());
+            case TRACE -> System.out.println(new Ansi().fg(Ansi.Color.MAGENTA).bold().a(text).reset());
         }
 
 

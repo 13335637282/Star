@@ -79,6 +79,7 @@ public class StarUI extends JFrame {
     }
 
     public StarUI() {
+        log.AddLog(Log.INFO, "[StarUI] Application starting...");
 
         JDialog frame = new JDialog();
         frame.setSize(500,300);
@@ -92,6 +93,7 @@ public class StarUI extends JFrame {
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
+            log.AddERRORLog("[StarUI] Splash screen interrupted", e);
             throw new RuntimeException(e);
         }
         frame.dispose();
@@ -106,14 +108,17 @@ public class StarUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         clearUI();
         mainInterface();
+
+        log.AddLog(Log.INFO, "[StarUI] Application initialized successfully");
     }
 
     public void clearUI() {
+        log.AddLog(Log.INFO, "[StarUI] Clearing UI components");
         this.getContentPane().removeAll();
         revalidate();
         repaint();
+        log.AddLog(Log.INFO, "[StarUI] UI cleared successfully");
     }
-
 
     /**
      * 解析时间字符串为毫秒数
@@ -123,7 +128,10 @@ public class StarUI extends JFrame {
      * - 字母: 1h, 1m, 1s, 1ms, 1h30m, 1h4ms 等
      */
     private long parseTimeString(String timeStr) {
+        log.AddLog(Log.INFO, "[StarUI] Parsing time string: " + timeStr);
+
         if (timeStr == null || timeStr.trim().isEmpty()) {
+            log.AddLog(Log.WARNING, "[StarUI] Empty time string provided, returning 0");
             return 0;
         }
 
@@ -131,23 +139,31 @@ public class StarUI extends JFrame {
 
         // 检查是否包含字母（字母格式）
         if (containsLetters(input)) {
-            return parseLetterFormat(input);
+            long result = parseLetterFormat(input);
+            log.AddLog(Log.INFO, "[StarUI] Letter format parsed, result: " + result + "ms");
+            return result;
         }
 
         // 检查是否包含小数点（小数点格式）
         if (input.contains(".")) {
-            return parseDotFormat(input);
+            long result = parseDotFormat(input);
+            log.AddLog(Log.INFO, "[StarUI] Dot format parsed, result: " + result + "ms");
+            return result;
         }
 
         // 默认冒号格式
-        return parseColonFormat(input);
+        long result = parseColonFormat(input);
+        log.AddLog(Log.INFO, "[StarUI] Colon format parsed, result: " + result + "ms");
+        return result;
     }
 
     /**
      * 检查字符串是否包含字母
      */
     private boolean containsLetters(String str) {
-        return str.matches(".*[a-z].*");
+        boolean result = str.matches(".*[a-z].*");
+        log.AddLog(Log.DEBUG, "[StarUI] Checking for letters in '" + str + "': " + result);
+        return result;
     }
 
     /**
@@ -155,6 +171,8 @@ public class StarUI extends JFrame {
      * 格式: 1h, 1m, 1s, 1ms, 1h30m, 1h4ms, 1h30m10s 等
      */
     private long parseLetterFormat(String input) {
+        log.AddLog(Log.INFO, "[StarUI] Parsing letter format: " + input);
+
         long totalMillis = 0;
 
         // 移除所有空格
@@ -167,6 +185,8 @@ public class StarUI extends JFrame {
         while (matcher.find()) {
             double value = Double.parseDouble(matcher.group(1));
             String unit = matcher.group(2);
+
+            log.AddLog(Log.DEBUG, "[StarUI] Found time component: " + value + unit);
 
             switch (unit) {
                 case "h":
@@ -184,6 +204,7 @@ public class StarUI extends JFrame {
             }
         }
 
+        log.AddLog(Log.INFO, "[StarUI] Letter format parsing complete: " + totalMillis + "ms");
         return totalMillis;
     }
 
@@ -192,8 +213,11 @@ public class StarUI extends JFrame {
      * 格式: 时:分:秒.毫秒, 分:秒.毫秒, 秒.毫秒
      */
     private long parseDotFormat(String input) {
+        log.AddLog(Log.INFO, "[StarUI] Parsing dot format: " + input);
+
         String[] parts = input.split("\\.");
         if (parts.length != 2) {
+            log.AddLog(Log.WARNING, "[StarUI] Invalid dot format, falling back to colon format");
             return parseColonFormat(input); // 回退到冒号格式
         }
 
@@ -213,6 +237,7 @@ public class StarUI extends JFrame {
             millisPart = Long.parseLong(afterDot.substring(0, Math.min(3, afterDot.length())));
         }
 
+        log.AddLog(Log.DEBUG, "[StarUI] Dot format - before: " + beforeMillis + "ms, after: " + millisPart + "ms");
         return beforeMillis + millisPart;
     }
 
@@ -221,8 +246,12 @@ public class StarUI extends JFrame {
      * 格式: 时:分:秒:毫秒, 时:分:秒, 时:分, 分
      */
     private long parseColonFormat(String input) {
+        log.AddLog(Log.INFO, "[StarUI] Parsing colon format: " + input);
+
         String[] parts = input.split(":");
         long totalMillis = 0;
+
+        log.AddLog(Log.DEBUG, "[StarUI] Colon format parts count: " + parts.length);
 
         if (parts.length == 1) {
             // 只有分钟
@@ -244,6 +273,7 @@ public class StarUI extends JFrame {
                     Long.parseLong(parts[3]);
         }
 
+        log.AddLog(Log.INFO, "[StarUI] Colon format parsing complete: " + totalMillis + "ms");
         return totalMillis;
     }
 
@@ -251,6 +281,8 @@ public class StarUI extends JFrame {
      * 将毫秒数格式化为易读的时间字符串
      */
     private String formatMillisToTime(long millis) {
+        log.AddLog(Log.DEBUG, "[StarUI] Formatting milliseconds to time: " + millis);
+
         if (millis <= 0) {
             return "00:00.000";
         }
@@ -260,16 +292,21 @@ public class StarUI extends JFrame {
         long seconds = (millis % (60 * 1000)) / 1000;
         long remainingMillis = millis % 1000;
 
+        String result;
         if (hours > 0) {
-            return String.format("%02d:%02d:%02d.%03d", hours, minutes, seconds, remainingMillis);
+            result = String.format("%02d:%02d:%02d.%03d", hours, minutes, seconds, remainingMillis);
         } else if (minutes > 0) {
-            return String.format("%02d:%02d.%03d", minutes, seconds, remainingMillis);
+            result = String.format("%02d:%02d.%03d", minutes, seconds, remainingMillis);
         } else {
-            return String.format("%02d.%03d", seconds, remainingMillis);
+            result = String.format("%02d.%03d", seconds, remainingMillis);
         }
+
+        log.AddLog(Log.DEBUG, "[StarUI] Formatted time: " + result);
+        return result;
     }
 
     public void testInterface() {
+        log.AddLog(Log.INFO, "[StarUI] Entering test interface");
         clearUI();
         setTitle("Star - "+config.getLang("test_interface"));
         setLayout(new BorderLayout());
@@ -279,17 +316,22 @@ public class StarUI extends JFrame {
         // 读取测试试卷
         String testFile = config.getString("test.last_test");
         if (testFile.isEmpty()) {
+            log.AddLog(Log.WARNING, "[StarUI] No test paper selected");
             JOptionPane.showMessageDialog(this, config.getLang("no_select_test_paper"));
             mainInterface();
             return;
         }
+
+        log.AddLog(Log.INFO, "[StarUI] Loading test paper: " + testFile);
 
         try {
             Gson gson = new Gson();
             FileReader reader = new FileReader(testFile);
             currentTestPaper = gson.fromJson(reader, TestPaper.class);
             reader.close();
+            log.AddLog(Log.INFO, "[StarUI] Test paper loaded successfully - Title: " + currentTestPaper.title);
         } catch (Exception e) {
+            log.AddERRORLog("[StarUI] Failed to load test paper: " + testFile, e);
             JOptionPane.showMessageDialog(this, config.getLang("reading_test_failed")+":" + e.getMessage());
             mainInterface();
             return;
@@ -314,10 +356,15 @@ public class StarUI extends JFrame {
         // 添加时间信息
         if (currentTestPaper.time != null && !currentTestPaper.time.isEmpty()) {
             JLabel timeLabel = new JLabel(config.getLang("time") + currentTestPaper.time);
+
+            log.AddLog(Log.INFO, "[StarUI] Starting test timer with duration: " + currentTestPaper.time);
+
             threads.put("test_timer",new Thread(() -> {
                 long totalMillis = parseTimeString(currentTestPaper.time);
                 long startTime = System.currentTimeMillis();
                 long remainingMillis = totalMillis;
+
+                log.AddLog(Log.INFO, "[StarUI/Timer] Timer started, total time: " + totalMillis + "ms");
 
                 while (!checked && remainingMillis > 0) {
                     long elapsed = System.currentTimeMillis() - startTime;
@@ -330,6 +377,7 @@ public class StarUI extends JFrame {
                     });
 
                     if (remainingMillis <= 0) {
+                        log.AddLog(Log.INFO, "[StarUI/Timer] Time's up, auto-submitting");
                         checkAnswers();
                         break;
                     }
@@ -337,11 +385,13 @@ public class StarUI extends JFrame {
                     try {
                         Thread.sleep(100); // 每100ms更新一次，减少CPU占用
                     } catch (InterruptedException e) {
+                        log.AddLog(Log.INFO, "[StarUI/Timer] Timer interrupted");
                         Thread.currentThread().interrupt();
                         break;
                     }
                 }
                 checked = false;
+                log.AddLog(Log.INFO, "[StarUI/Timer] Timer thread finished");
             }));
 
             threads.get("test_timer").start();
@@ -352,13 +402,15 @@ public class StarUI extends JFrame {
             mainPanel.add(timeLabel);
         }
 
-
         // 遍历所有组件并渲染
         if (currentTestPaper.components != null) {
+            log.AddLog(Log.INFO, "[StarUI] Rendering " + currentTestPaper.components.size() + " paper components");
             for (int i = 0; i < currentTestPaper.components.size(); i++) {
                 PaperComponent component = currentTestPaper.components.get(i);
                 renderComponent(mainPanel, component, i);
             }
+        } else {
+            log.AddLog(Log.WARNING, "[StarUI] No components found in test paper");
         }
 
         scrollPane.setViewportView(mainPanel);
@@ -368,6 +420,7 @@ public class StarUI extends JFrame {
         TextButton backButton = new TextButton(config.getLang("return_main_interface"));
         backButton.setAction(ele -> {
             if (ele == TextButton.MouseEvent.Pressed) {
+                log.AddLog(Log.INFO, "[StarUI] Back button pressed, returning to main interface");
                 stopCurrentAudio();
                 Sound.play_sound("ui/click_button");
                 while (getWidth() >= 300 || getHeight() >= 100) {
@@ -376,6 +429,7 @@ public class StarUI extends JFrame {
                     try {
                         Thread.sleep(30);
                     } catch (InterruptedException e) {
+                        log.AddERRORLog("[StarUI] Animation interrupted", e);
                         throw new RuntimeException(e);
                     }
                 }
@@ -388,9 +442,12 @@ public class StarUI extends JFrame {
         revalidate();
         repaint();
 
+        // 验证问题组件
+        log.AddLog(Log.INFO, "[StarUI] Validating " + questionComponents.size() + " question components");
         for (QuestionComponent q : questionComponents) {
             if (!q.isValid()) {
                 checked=true;
+                log.AddLog(Log.ERROR, "[StarUI] Invalid question component found: " + q);
 
                 Object x = JOptionPane.showInputDialog(
                         null,
@@ -401,19 +458,24 @@ public class StarUI extends JFrame {
                         new Object[]{config.getLang("return_main_interface"),config.getLang("ignore_risks")},
                         null);
                 if (x.equals(config.getLang("return_main_interface"))) {
+                    log.AddLog(Log.INFO, "[StarUI] User chose to return to main interface due to validation error");
                     clearUI();
                     mainInterface();
                     break;
                 } else {
+                    log.AddLog(Log.WARNING, "[StarUI] User chose to ignore validation risks");
                     break;
                 }
             }
         }
 
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        log.AddLog(Log.INFO, "[StarUI] Test interface setup complete");
     }
 
     private void renderComponent(JPanel parent, PaperComponent component, int index) {
+        log.AddLog(Log.DEBUG, "[StarUI] Rendering component " + index + " of type: " + component.type);
+
         switch (component.type) {
             case "text":
                 renderTextComponent(parent, component);
@@ -424,7 +486,7 @@ public class StarUI extends JFrame {
                 parent.add(Box.createRigidArea(new Dimension(0, 10)));
                 questionComponents.add(questionComponent);
                 questionCount ++;
-
+                log.AddLog(Log.DEBUG, "[StarUI] Added question component, total: " + questionCount);
                 break;
             case "listening_comprehension":
                 renderListeningComprehension(parent, component);
@@ -432,11 +494,15 @@ public class StarUI extends JFrame {
             case "submit":
                 renderSubmitButton(parent);
                 break;
+            default:
+                log.AddLog(Log.WARNING, "[StarUI] Unknown component type: " + component.type);
         }
     }
 
     private void renderTextComponent(JPanel parent, PaperComponent component) {
         if (component.text != null) {
+            log.AddLog(Log.DEBUG, "[StarUI] Rendering text component: " + component.text.text.substring(0, Math.min(50, component.text.text.length())) + "...");
+
             JLabel label = new JLabel(component.text.text);
             int style = Font.PLAIN;
             if (component.text.bold) style |= Font.BOLD;
@@ -445,10 +511,14 @@ public class StarUI extends JFrame {
             label.setAlignmentX(Component.LEFT_ALIGNMENT);
             parent.add(label);
             parent.add(Box.createRigidArea(new Dimension(0, 10)));
+        } else {
+            log.AddLog(Log.WARNING, "[StarUI] Text component has null text");
         }
     }
 
     private void renderListeningComprehension(JPanel parent, PaperComponent component) {
+        log.AddLog(Log.INFO, "[StarUI] Rendering listening comprehension component");
+
         JPanel listeningPanel = new JPanel();
         listeningPanel.setLayout(new BoxLayout(listeningPanel, BoxLayout.Y_AXIS));
         listeningPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -463,9 +533,13 @@ public class StarUI extends JFrame {
 
         playButton.setAction(ele -> {
             if (ele == TextButton.MouseEvent.Pressed && !isPlaying) {
+                log.AddLog(Log.INFO, "[StarUI] Play listening button pressed");
                 if (component.value != null && !component.value.isEmpty()) {
                     String textToSpeak = component.value.get(0).getAsString();
+                    log.AddLog(Log.DEBUG, "[StarUI] Text to speak length: " + textToSpeak.length());
                     playTextWithPauses(textToSpeak);
+                } else {
+                    log.AddLog(Log.WARNING, "[StarUI] No text content in listening component");
                 }
             }
         });
@@ -479,15 +553,22 @@ public class StarUI extends JFrame {
     }
 
     private void playTextWithPauses(String text) {
+        log.AddLog(Log.INFO, "[StarUI] Starting text playback with pauses");
+
         audioExecutor.execute(() -> {
             isPlaying = true;
             try {
                 // 按标点符号分割文本
                 String[] segments = text.split("(?<=[。.,，…、])");
+                log.AddLog(Log.DEBUG, "[StarUI/Audio] Split text into " + segments.length + " segments");
 
-                for (String segment : segments) {
-                    if (!isPlaying) break;
+                for (int i = 0; i < segments.length; i++) {
+                    if (!isPlaying) {
+                        log.AddLog(Log.INFO, "[StarUI/Audio] Playback stopped by user");
+                        break;
+                    }
 
+                    String segment = segments[i];
                     // 根据标点符号确定停顿时间
                     double pauseSeconds = 0.5; // 默认停顿
                     if (segment.endsWith("。") || segment.endsWith(".")) {
@@ -498,6 +579,8 @@ public class StarUI extends JFrame {
                         pauseSeconds = 0.4;
                     }
 
+                    log.AddLog(Log.DEBUG, "[StarUI/Audio] Playing segment " + (i+1) + "/" + segments.length + " with pause: " + pauseSeconds + "s");
+
                     // 使用JACOB播放当前片段
                     speakTextWithJacob(segment.trim());
 
@@ -506,33 +589,39 @@ public class StarUI extends JFrame {
                         Thread.sleep((long)(pauseSeconds * 1000));
                     }
                 }
+
+                log.AddLog(Log.INFO, "[StarUI/Audio] Text playback completed");
             } catch (Exception e) {
+                log.AddERRORLog("[StarUI/Audio] Playback failed", e);
                 JOptionPane.showMessageDialog(this, config.getLang("playback_failed")+": " + e.getMessage());
-                e.printStackTrace();
             } finally {
                 isPlaying = false;
+                log.AddLog(Log.DEBUG, "[StarUI/Audio] Playback finished, isPlaying set to false");
             }
         });
     }
 
     /**
-     * 使用JACOB库进行文本转语音并播放[citation:1][citation:3][citation:5]
+     * 使用JACOB库进行文本转语音并播放
      */
     private void speakTextWithJacob(String text) {
+        log.AddLog(Log.INFO, "[StarUI/Audio] Starting JACOB TTS for text: " + text.substring(0, Math.min(30, text.length())) + "...");
+
         try {
             // 创建临时WAV文件
             File tempFile = File.createTempFile("speech", ".wav");
             tempFile.deleteOnExit();
 
             String tempFilePath = tempFile.getAbsolutePath();
+            log.AddLog(Log.DEBUG, "[StarUI/Audio] Created temp file: " + tempFilePath);
 
-            // 使用JACOB生成语音文件[citation:7][citation:10]
+            // 使用JACOB生成语音文件
             ActiveXComponent ax = new ActiveXComponent("Sapi.SpVoice");
             Dispatch spVoice = ax.getObject();
 
             // 设置语音属性
-            ax.setProperty("Volume", new Variant(100)); // 音量 0-100[citation:5]
-            ax.setProperty("Rate", new Variant(1));    // 语速 -10 到 +10[citation:5]
+            ax.setProperty("Volume", new Variant(100)); // 音量 0-100
+            ax.setProperty("Rate", new Variant(1));    // 语速 -10 到 +10
 
             // 创建文件流对象
             ActiveXComponent fileStream = new ActiveXComponent("Sapi.SpFileStream");
@@ -569,18 +658,22 @@ public class StarUI extends JFrame {
             fileStream.safeRelease();
             audioFormat.safeRelease();
 
-            // 使用Java自带功能播放生成的WAV文件[citation:2][citation:4][citation:6]
+            log.AddLog(Log.DEBUG, "[StarUI/Audio] JACOB TTS completed, playing WAV file");
+
+            // 使用Java自带功能播放生成的WAV文件
             playWavFile(tempFilePath);
 
         } catch (Exception e) {
-            log.AddERRORLog("PlayBack Failed",e);
+            log.AddERRORLog("[StarUI/Audio] JACOB TTS failed", e);
         }
     }
 
     /**
-     * 使用Java Sound API播放WAV文件[citation:2][citation:4]
+     * 使用Java Sound API播放WAV文件
      */
     private void playWavFile(String filePath) {
+        log.AddLog(Log.DEBUG, "[StarUI/Audio] Playing WAV file: " + filePath);
+
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(filePath));
             Clip clip = AudioSystem.getClip();
@@ -590,6 +683,7 @@ public class StarUI extends JFrame {
             currentClip = clip;
 
             clip.start();
+            log.AddLog(Log.DEBUG, "[StarUI/Audio] Clip started");
 
             // 等待播放完成
             while (!clip.isRunning()) {
@@ -603,8 +697,10 @@ public class StarUI extends JFrame {
             audioInputStream.close();
             currentClip = null;
 
+            log.AddLog(Log.DEBUG, "[StarUI/Audio] Clip playback completed");
+
         } catch (Exception e) {
-            log.AddERRORLog("playback failed",e);
+            log.AddERRORLog("[StarUI/Audio] WAV file playback failed", e);
         }
     }
 
@@ -612,21 +708,28 @@ public class StarUI extends JFrame {
      * 停止当前播放的音频
      */
     private void stopCurrentAudio() {
+        log.AddLog(Log.INFO, "[StarUI] Stopping current audio playback");
         isPlaying = false;
         if (currentClip != null && currentClip.isRunning()) {
             currentClip.stop();
             currentClip.close();
             currentClip = null;
+            log.AddLog(Log.INFO, "[StarUI] Audio playback stopped successfully");
+        } else {
+            log.AddLog(Log.DEBUG, "[StarUI] No audio currently playing");
         }
     }
 
     private void renderSubmitButton(JPanel parent) {
+        log.AddLog(Log.DEBUG, "[StarUI] Rendering submit button");
+
         JPanel submitPanel = new JPanel();
         submitPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         TextButton submitButton = new TextButton(config.getLang("submit"));
         submitButton.setAction(ele -> {
             if (ele == TextButton.MouseEvent.Pressed && !checked) {
+                log.AddLog(Log.INFO, "[StarUI] Submit button pressed");
                 checkAnswers();
             }
         });
@@ -637,7 +740,19 @@ public class StarUI extends JFrame {
     }
 
     private void checkAnswers() {
-        if (!checked ){StringBuilder result = new StringBuilder();
+        log.AddLog(Log.INFO, "[StarUI] Starting answer checking process");
+
+        if (!checked ){
+            try {
+                if (threads.containsKey("test_timer")) {
+                    threads.get("test_timer").interrupt();
+                    log.AddLog(Log.INFO, "[StarUI] Test timer interrupted");
+                }
+            } catch (Exception e) {
+                log.AddERRORLog("[StarUI] Failed to interrupt test timer", e);
+            }
+
+            StringBuilder result = new StringBuilder();
 
             int correct_blank = calculateScore();
             int total_blank = calculateTotalQuestions();
@@ -650,7 +765,11 @@ public class StarUI extends JFrame {
             }
             float score_percentage = (float) (score) / (total_score) * 100.00f;
 
-// 确定评级文本
+            log.AddLog(Log.INFO, "[StarUI] Score calculation - Correct: " + correct_blank +
+                    "/" + total_blank + ", Score: " + score + "/" + total_score +
+                    " (" + String.format("%.2f", score_percentage) + "%)");
+
+            // 确定评级文本
             String gradeText;
             if (score_percentage >= 95f) { gradeText = "A++"; }
             else if (score_percentage >= 90f) { gradeText = "A+"; }
@@ -673,7 +792,9 @@ public class StarUI extends JFrame {
             else if (score_percentage >= 5f) { gradeText = "F-"; }
             else { gradeText = "F--"; }
 
-// 确定颜色
+            log.AddLog(Log.INFO, "[StarUI] Grade assigned: " + gradeText);
+
+            // 确定颜色
             Color gradeColor;
             if (score_percentage >= 85f) {
                 gradeColor = Color.green;
@@ -696,7 +817,7 @@ public class StarUI extends JFrame {
                     )
             );
 
-// 显示详细结果
+            // 显示详细结果
             JFrame frame = new JFrame();
             frame.setResizable(false);
             frame.setSize(500, 400); // 稍微增大窗口以容纳印章
@@ -712,7 +833,7 @@ public class StarUI extends JFrame {
             area.setBounds(50, 50, 300, 200);
             area.setBackground(new Color(0,0,0,0));
 
-// 创建印章面板
+            // 创建印章面板
             StampPanel stampPanel = new StampPanel(gradeText, gradeColor);
             stampPanel.setBounds(350, 250, 100, 100);
 
@@ -725,13 +846,19 @@ public class StarUI extends JFrame {
             frame.repaint();
             frame.revalidate();
 
+            log.AddLog(Log.INFO, "[StarUI] Results displayed to user");
+        } else {
+            log.AddLog(Log.WARNING, "[StarUI] checkAnswers called but already checked");
         }
-
     }
 
     private int calculateScore() {
+        log.AddLog(Log.INFO, "[StarUI] Calculating score");
         // 计算总题数
-        if (currentTestPaper.components == null) return 0;
+        if (currentTestPaper.components == null) {
+            log.AddLog(Log.WARNING, "[StarUI] No components found for score calculation");
+            return 0;
+        }
 
         AtomicInteger count = new AtomicInteger();
         for (QuestionComponent comp : questionComponents) {
@@ -741,47 +868,55 @@ public class StarUI extends JFrame {
                     count.getAndIncrement();
                 }
             });
-            log.AddLog(Log.INFO,"comp:"+comp+" total:"+count);
+            log.AddLog(Log.DEBUG, "[StarUI] Component checked: " + comp + " current count: " + count);
         }
+
+        log.AddLog(Log.INFO, "[StarUI] Final score count: " + count.get());
         return count.get();
     }
 
     private int calculateTotalQuestions() {
+        log.AddLog(Log.INFO, "[StarUI] Calculating total questions");
         // 计算总题数
-        if (currentTestPaper.components == null) return 0;
+        if (currentTestPaper.components == null) {
+            log.AddLog(Log.WARNING, "[StarUI] No components found for total question calculation");
+            return 0;
+        }
 
         int count = 0;
 
         for (QuestionComponent comp : questionComponents) {
             int a = comp.getAnswerCount();
             count += a;
-            log.AddLog(Log.INFO,"comp:"+comp+" answerCount:"+a+" total:"+count);
+            log.AddLog(Log.DEBUG, "[StarUI] Component: " + comp + " answerCount: " + a + " running total: " + count);
         }
 
+        log.AddLog(Log.INFO, "[StarUI] Final total questions: " + count);
         return count ;
     }
 
-
-
-
     public void mainInterface() {
+        log.AddLog(Log.INFO, "[StarUI] Entering main interface");
         setLayout(null);
         clearUI();
         setTitle("Star");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         try {
-            threads.get("test_timer").interrupt();
-            log.AddLog(Log.INFO,"[StarUI/Threads] Killed Thread!(id:test_timer)");
+            if (threads.containsKey("test_timer")) {
+                threads.get("test_timer").interrupt();
+                log.AddLog(Log.INFO, "[StarUI/Threads] Killed Thread!(id:test_timer)");
+            }
         } catch (Exception e) {
-
+            log.AddERRORLog("[StarUI] Failed to kill test timer thread", e);
         }
 
-// 创建一个专门用于绘制波浪的面板
+        // 创建一个专门用于绘制波浪的面板
         JPanel wavePanel = new JPanel() {
             Wave[] waves = new Wave[3];
 
             {
+                log.AddLog(Log.DEBUG, "[StarUI/Wave] Initializing wave animation");
                 // 初始化波浪
                 waves[0] = new Wave(0.02, 0.4, 0.005, new Color(100, 100, 255, 100), 0.4, 50);
                 waves[1] = new Wave(0.03, 0.3, 0.007, new Color(100, 100, 255, 100), 0.6, 50);
@@ -796,6 +931,7 @@ public class StarUI extends JFrame {
                 timer.start();
 
                 setOpaque(false);
+                log.AddLog(Log.DEBUG, "[StarUI/Wave] Wave animation initialized");
             }
 
             @Override
@@ -816,6 +952,9 @@ public class StarUI extends JFrame {
         if (!config.getString("test.last_test").isEmpty()) {
             subtitle.setText(config.getLang("current_test_paper") +
                     config.getString("test.last_test"));
+            log.AddLog(Log.INFO, "[StarUI] Current test paper: " + config.getString("test.last_test"));
+        } else {
+            log.AddLog(Log.INFO, "[StarUI] No test paper selected");
         }
 
         ActionButton select_test_paper = new ActionButton(
@@ -826,11 +965,11 @@ public class StarUI extends JFrame {
         select_test_paper.setAction(ele -> {
             if (ele == ActionButton.MouseEvent.Pressed) {
                 Sound.play_sound("ui/click_button");
-                log.AddLog(Log.INFO, "[Event] Select Test Paper");
+                log.AddLog(Log.INFO, "[Event] Select Test Paper button pressed");
 
                 JFileChooser fileChooser = new JFileChooser();
                 for (FileFilter fileFilter : fileChooser.getChoosableFileFilters()) {
-                    log.AddLog(Log.INFO, "[Event/UI] Removed FileFilter :" + fileFilter);
+                    log.AddLog(Log.DEBUG, "[Event/UI] Removed FileFilter: " + fileFilter);
                     fileChooser.removeChoosableFileFilter(fileFilter);
                 }
                 fileChooser.setFileFilter(new FileFilter() {
@@ -854,12 +993,17 @@ public class StarUI extends JFrame {
 
                 if (r == JFileChooser.APPROVE_OPTION) {
                     File selectedFile = fileChooser.getSelectedFile();
+                    log.AddLog(Log.INFO, "[Event] User selected test paper: " + selectedFile.getPath());
+
                     subtitle.setText(
                             config.getString("lang." +
                                     config.getString("settings.lang") +
                                     ".current_test_paper") + selectedFile.getPath()
                     );
                     config.setString("test.last_test", selectedFile.getPath());
+                    log.AddLog(Log.INFO, "[Config] Updated last_test to: " + selectedFile.getPath());
+                } else {
+                    log.AddLog(Log.INFO, "[Event] User cancelled file selection");
                 }
 
                 setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -876,6 +1020,14 @@ public class StarUI extends JFrame {
         start_paper.setAction(ele -> {
             if (ele == ActionButton.MouseEvent.Pressed) {
                 Sound.play_sound("ui/click_button");
+                log.AddLog(Log.INFO, "[Event] Start Test button pressed");
+
+                if (config.getString("test.last_test").isEmpty()) {
+                    log.AddLog(Log.WARNING, "[Event] No test paper selected, cannot start test");
+                    JOptionPane.showMessageDialog(this, config.getLang("no_select_test_paper"));
+                    return;
+                }
+
                 while (true) {
                     if (getWidth() < 300 && getHeight() < 100) {
                         break;
@@ -885,6 +1037,7 @@ public class StarUI extends JFrame {
                     try {
                         Thread.sleep(30);
                     } catch (InterruptedException e) {
+                        log.AddERRORLog("[StarUI] Animation interrupted", e);
                         throw new RuntimeException(e);
                     }
                 }
@@ -902,6 +1055,8 @@ public class StarUI extends JFrame {
         settings.setAction(ele -> {
             if (ele.equals(ActionButton.MouseEvent.Pressed)) {
                 Sound.play_sound("ui/click_button");
+                log.AddLog(Log.INFO, "[Event] Settings button pressed");
+                // TODO: 实现设置界面
             }
         });
 
@@ -945,18 +1100,30 @@ public class StarUI extends JFrame {
         });
         timer.start();
 
-
         revalidate();
         repaint();
+        log.AddLog(Log.INFO, "[StarUI] Main interface setup complete");
     }
 
     @Override
     public void dispose() {
+        log.AddLog(Log.INFO, "[StarUI] Application shutting down");
         // 关闭时释放资源
         stopCurrentAudio();
         if (audioExecutor != null && !audioExecutor.isShutdown()) {
             audioExecutor.shutdown();
+            log.AddLog(Log.INFO, "[StarUI] Audio executor shutdown");
         }
+
+        // 中断所有线程
+        for (Map.Entry<String, Thread> entry : threads.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().isAlive()) {
+                entry.getValue().interrupt();
+                log.AddLog(Log.INFO, "[StarUI] Interrupted thread: " + entry.getKey());
+            }
+        }
+
         super.dispose();
+        log.AddLog(Log.INFO, "[StarUI] Application shutdown complete");
     }
 }
