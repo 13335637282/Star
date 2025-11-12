@@ -14,7 +14,7 @@ public class Log {
     static final String INFO= "INFO";
     static final String WRONG = "WRONG";
     static final String ERROR = "ERROR";
-    static String log_path = ".Star/log";
+    static String log_path = "Star/log";
     static Config config = new Config();
     static {
         if (new File(config.getString("log.path")).exists()) {

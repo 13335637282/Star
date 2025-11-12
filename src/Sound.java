@@ -6,7 +6,7 @@ public class Sound {
     public static void play_sound(String path) {
         new Thread(() -> {
             try {
-                File soundFile = new File(".Star/sound/" + path + ".wav");
+                File soundFile = new File("Star/sound/" + path + ".wav");
 
                 AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
 

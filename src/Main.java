@@ -36,6 +36,24 @@ public class Main {
             }
         }
 
+        // 检查完整Star文件完整性
+        if (!new File("Star/jacob-1.18-x64.dll").exists() || !new File("Star/jacob-1.18-x64.dll").exists()) {
+            // 下载地址 https://github.com/freemansoft/jacob-project/releases/download/Root_B-1_18/jacob-1.18.zip
+            // zip 结构
+            // jacob-1.18
+            //  |_ jacob-1.18-x64.dll
+            //  |_ jacob-1.18-x86.dll
+            // TODO 如果没有dll，就下载zip到Star/Temp，然后解压到Star/Temp，自动选择系统架构(x64/x86)，复制到Star文件夹，然后删除zip和解压文件夹
+            // TODO 复制完成后，根据系统架构复制到 C:\Windows\System32  或  C:\Windows\SysWOW64
+
+        }
+
+        if (!new File("Star/sound/ui/click_button.wav").exists()) {
+            if (new File("Star/sound/ui").mkdirs()) {
+                
+            }
+        }
+
         StarUI starUI = new StarUI();
         log.AddLog(Log.INFO,"[Main] Start UI");
     }

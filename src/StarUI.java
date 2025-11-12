@@ -6,7 +6,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +36,7 @@ public class StarUI extends JFrame {
     private int questionCount = 0;
     private boolean checked = false;
     private ArrayList<Consumer<? super Graphics>> paintComponentActions = new ArrayList<>();
+    private HashMap<String,Thread> threads = new HashMap<>();
 
     @Override
     public void paintComponents(Graphics g) {
@@ -311,7 +314,7 @@ public class StarUI extends JFrame {
         // 添加时间信息
         if (currentTestPaper.time != null && !currentTestPaper.time.isEmpty()) {
             JLabel timeLabel = new JLabel(config.getLang("time") + currentTestPaper.time);
-            new Thread(() -> {
+            threads.put("test_timer",new Thread(() -> {
                 long totalMillis = parseTimeString(currentTestPaper.time);
                 long startTime = System.currentTimeMillis();
                 long remainingMillis = totalMillis;
@@ -339,7 +342,9 @@ public class StarUI extends JFrame {
                     }
                 }
                 checked = false;
-            }).start();
+            }));
+
+            threads.get("test_timer").start();
 
             timeLabel.setFont(new Font(config.getString("settings.font"), Font.PLAIN, 14));
             timeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -764,6 +769,13 @@ public class StarUI extends JFrame {
         clearUI();
         setTitle("Star");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        try {
+            threads.get("test_timer").interrupt();
+            log.AddLog(Log.INFO,"[StarUI/Threads] Killed Thread!(id:test_timer)");
+        } catch (Exception e) {
+
+        }
 
 // 创建一个专门用于绘制波浪的面板
         JPanel wavePanel = new JPanel() {
